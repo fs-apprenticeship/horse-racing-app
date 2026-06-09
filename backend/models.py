@@ -12,7 +12,11 @@ class Horse(Base):
     age = Column(Integer)
     trainer_name = Column(Text)
     father_name = Column(Text)
+    father_id = Column(Text)
     mother_name = Column(Text)
+    mother_id = Column(Text)
+    f_father_id = Column(Text)
+    m_father_id = Column(Text)
 
     results = relationship("RaceResult", back_populates="horse",cascade="all, delete-orphan")
     races= association_proxy('results', 'race')
