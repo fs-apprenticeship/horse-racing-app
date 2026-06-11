@@ -1,7 +1,6 @@
 "use client";
 
-import horseNames from "../en_horse_names.json";
-
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,7 +10,8 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { useState } from "react";
+
+import horseNames from "../en_horse_names.json";
 
 export default function HorseViewer() {
     const [horseInput, setHorseInput] = useState("");
