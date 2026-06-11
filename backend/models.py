@@ -24,6 +24,7 @@ class Horse(Base):
 class Race(Base):
     __tablename__ = "race"
     id = Column(Text, primary_key=True)
+    race_number = Column(Integer)
     race_name = Column(Text)
     race_date = Column(Text)
     race_type = Column(Text)
@@ -32,7 +33,6 @@ class Race(Base):
     course = Column(Text)
     condition = Column(Text)
     weather = Column(Text)
-    max_prize = Column(Float)
 
     results = relationship("RaceResult", back_populates="race", cascade="all, delete-orphan")
     horses= association_proxy('results', 'horse')
@@ -43,17 +43,12 @@ class RaceResult(Base):
     race_id = Column(Text, ForeignKey("race.id"))  
     horse_id = Column(Text, ForeignKey("horse.id"))  
     rank = Column(Integer)
-    horse_name = Column(Text)
-    gender = Column(Text)
-    age = Column(Integer)
     jockey_name = Column(Text)
-    trainer_name = Column(Text)
     rap_time = Column(Float)
     weight = Column(Integer)
     weight_diff = Column(Integer)
     prize = Column(Float)
     burden = Column(Float)
-    diff_time = Column(Float)
     last_3f = Column(Float)
     win_odds = Column(Float) 
     bracket = Column(Integer)
