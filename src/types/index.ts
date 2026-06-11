@@ -18,12 +18,12 @@ export interface Race {
     race_name: string;
     race_date: string;
     race_type: string;
+    race_number: number;
     place: string;
     length: number;
     course: string;
     condition: string;
     weather: string;
-    max_prize: number;
 }
 
 export interface RaceResult {
@@ -31,17 +31,12 @@ export interface RaceResult {
     race_id: string;
     horse_id: string;
     rank: number;
-    horse_name: string;
-    gender: string;
-    age: number;
     jockey_name: string;
-    trainer_name: string;
     rap_time: number;
     weight: number;
     weight_diff: number;
     prize: number;
     burden: number;
-    diff_time: number;
     last_3f: number;
     win_odds: number;
     bracket: number;
