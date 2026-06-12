@@ -17,7 +17,7 @@ app = FastAPI(lifespan=lifespan)
 
 # Load the horse ID -> English name mapping into memory at startup
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_PATH = os.path.join(BASE_DIR, "..", "data", "en_horse_names.json")
+DATA_PATH = os.path.join(BASE_DIR, "..", "src", "features", "horse-viewer", "en_horse_names.json")
 
 with open(DATA_PATH, "r") as f:
     english_names = json.load(f)
