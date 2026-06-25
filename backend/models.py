@@ -24,6 +24,7 @@ class Horse(Base):
 class Race(Base):
     __tablename__ = "race"
     id = Column(Text, primary_key=True)
+    track_id = Column(Text, ForeignKey("track.id"))
     race_number = Column(Integer)
     race_name = Column(Text)
     race_date = Column(Text)
@@ -34,6 +35,7 @@ class Race(Base):
     condition = Column(Text)
     weather = Column(Text)
 
+    track= relationship("Track", back_populates="races")
     results = relationship("RaceResult", back_populates="race", cascade="all, delete-orphan")
     horses= association_proxy('results', 'horse')
     
@@ -55,3 +57,12 @@ class RaceResult(Base):
 
     horse = relationship("Horse", back_populates="results")
     race = relationship("Race", back_populates="results")
+
+class Track(Base):
+    __tablename__ = "track"
+    id = Column(Text, primary_key=True)  # using place value as id, e.g. "中山"
+    name = Column(Text) # also using place field, but named "name" instead
+    surface = Column(Text) # from course field but named "surface" instead
+    length = Column(Integer) 
+
+    races = relationship("Race", back_populates="track", cascade="all, delete-orphan")
