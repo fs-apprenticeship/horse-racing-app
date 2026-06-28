@@ -118,3 +118,50 @@ def load_horse_into_db(db: Session, horse_id: str) -> Horse:
     db.refresh(horse)
 
     return horse
+
+
+def serialize_horse(horse: Horse) -> dict:
+    return {
+        "id": horse.id,
+        "name_english": horse.name_english,
+        "name_japanese": horse.name_japanese,
+        "gender": horse.gender,
+        "age": horse.age,
+        "trainer_name": horse.trainer_name,
+        "father_name": horse.father_name,
+        "father_id": horse.father_id,
+        "mother_name": horse.mother_name,
+        "mother_id": horse.mother_id,
+        "f_father_id": horse.f_father_id,
+        "m_father_id": horse.m_father_id,
+        "results": [
+            {
+                "id": result.id,
+                "race_id": result.race_id,
+                "horse_id": result.horse_id,
+                "rank": result.rank,
+                "jockey_name": result.jockey_name,
+                "rap_time": result.rap_time,
+                "weight": result.weight,
+                "weight_diff": result.weight_diff,
+                "prize": result.prize,
+                "burden": result.burden,
+                "last_3f": result.last_3f,
+                "win_odds": result.win_odds,
+                "bracket": result.bracket,
+                "race": {
+                    "id": result.race.id,
+                    "race_name": result.race.race_name,
+                    "race_date": result.race.race_date,
+                    "race_type": result.race.race_type,
+                    "race_number": result.race.race_number,
+                    "place": result.race.place,
+                    "length": result.race.length,
+                    "course": result.race.course,
+                    "condition": result.race.condition,
+                    "weather": result.race.weather,
+                },
+            }
+            for result in horse.results
+        ],
+    }

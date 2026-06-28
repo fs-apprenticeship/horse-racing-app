@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from database import engine, Base, get_db
-from services import load_horse_into_db
+from services import load_horse_into_db, serialize_horse
 
 # Create database tables automatically when the application starts.
 @asynccontextmanager
@@ -18,4 +18,5 @@ def root():
 
 @app.get("/horses/{horse_id}")
 def get_horse(horse_id: str, db: Session = Depends(get_db)):
-    return load_horse_into_db(db, horse_id)
+    horse = load_horse_into_db(db, horse_id)
+    return serialize_horse(horse)

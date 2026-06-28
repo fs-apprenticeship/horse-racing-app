@@ -10,7 +10,8 @@ export interface Horse {
     mother_name: string;
     mother_id: string;
     f_father_id: string;
-    f_mother_id: string;
+    f_mother_id?: string;
+    m_father_id?: string;
 }
 
 export interface Race {
@@ -40,4 +41,9 @@ export interface RaceResult {
     last_3f: number;
     win_odds: number;
     bracket: number;
+    race?: Race;
+}
+
+export interface HorseDetail extends Horse {
+    results?: Array<RaceResult & { race: Race }>;
 }
