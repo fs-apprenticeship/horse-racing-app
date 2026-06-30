@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState, useTransition } from "react";
 import { Input } from "@/components/ui/input";
 import {
     Card,
@@ -15,24 +14,43 @@ import { horses } from "../temp_data";
 import { Horse } from "@/types";
 
 export default function HorseViewer() {
-    const [horseInput, setHorseInput] = useState("");
-    const [currentHorse, setCurrentHorse] = useState<Horse | null | undefined>(
-        null,
-    );
+    const [loading, startTransition] = useTransition();
+    const [searchValue, setSearchValue] = useState("");
+    const [results, setResults] = useState<Horse[]>([]);
+    const [noResults, setNoResults] = useState(false);
 
-    const handleSubmit = (e: React.BaseSyntheticEvent) => {
-        e.preventDefault();
-        const horse = horses.find(
-            (horse) =>
-                horse.name_english.toLowerCase() === horseInput.toLowerCase(),
-        );
-        setCurrentHorse(horse);
+    const handleInputChange = (event: React.BaseSyntheticEvent) => {
+        setSearchValue(event.target.value);
     };
+
+    // TODO: Set up API route that returns a list of all horses
+    useEffect(() => {
+        const res = horses.filter((horse) =>
+            horse.name_english
+                .toLowerCase()
+                .includes(searchValue.toLowerCase()),
+        );
+
+        startTransition(() => {
+            if (searchValue !== "") {
+                if (res.length > 0) {
+                    setResults(res);
+                    setNoResults(false);
+                } else {
+                    setResults([]);
+                    setNoResults(true);
+                }
+            } else {
+                setResults([]);
+                setNoResults(false);
+            }
+        });
+    }, [searchValue]);
 
     return (
         <div className="flex min-h-[calc(100vh-4rem)] items-start justify-center bg-background px-4 pt-12 sm:pt-36">
-            <div className="animate-in fade-in slide-in-from-bottom-3 w-full max-w-[720px] space-y-3 pb-12 duration-500 ease-out">
-                <Card>
+            <div className="w-full max-w-180 space-y-3 pb-12 duration-500 ease-out">
+                <Card className="bg-indigo-950/50">
                     <CardHeader className="pb-4">
                         <CardTitle className="text-[15px] font-semibold tracking-tight text-foreground">
                             Horse Searcher
@@ -42,29 +60,39 @@ export default function HorseViewer() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="pt-0">
-                        <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-col gap-4">
                             <Input
                                 id="horse-name-input"
                                 name="horse-name-input"
                                 type="text"
-                                value={horseInput}
+                                value={searchValue}
                                 required
                                 placeholder="Horse"
-                                className="h-8 text-[13px]"
-                                onChange={(e) => setHorseInput(e.target.value)}
+                                className="h-8 text-[13px] bg-indigo-900/50"
+                                onChange={(e) => handleInputChange(e)}
                             />
+                            {noResults && (
+                                <div>
+                                    <CardDescription className="text-[13px] leading-5 text-muted-foreground">
+                                        {`No results found for "`}
+                                        <b>{searchValue}</b>
+                                        {`"`}
+                                    </CardDescription>
+                                </div>
+                            )}
+                            {!noResults && !loading && (
+                                <div className="flex flex-col gap-2 max-h-120 overflow-y-auto scrollbar-gutter-both scrollbar-thumb-violet-400">
+                                    {results.map((horse) => (
+                                        <HorseResult
+                                            key={horse.id}
+                                            horse={horse}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                        <Button
-                            type="submit"
-                            size="sm"
-                            className="mt-1 w-full h-8 text-[13px] font-medium hover:opacity-90"
-                            onClick={handleSubmit}
-                        >
-                            Search
-                        </Button>
                     </CardContent>
                 </Card>
-                <HorseResult horse={currentHorse} />
             </div>
         </div>
     );
