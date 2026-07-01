@@ -3,19 +3,12 @@ import os
 import keibascraper
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from models import Horse, Race, RaceResult
+from models import Horse, Race, RaceResult, Track
 
 
 # Load English name lookup once when the module is imported
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_PATH = os.path.join(
-    BASE_DIR,
-    "..",
-    "src",
-    "features",
-    "horse-viewer",
-    "en_horse_names.json"
-)
+DATA_PATH = os.path.join(BASE_DIR, "..", "src", "features", "horse-viewer", "en_horse_names.json")
 
 with open(DATA_PATH, "r") as f:
     english_names = json.load(f)
@@ -77,14 +70,25 @@ def load_horse_into_db(db: Session, horse_id: str) -> Horse:
 
     db.add(horse)
 
-    # Create races and race results
+    # Create tracks, races and race results
     for r in history:
+
+        track = db.query(Track).filter(Track.place == r['place'], Track.course == r["course"], Track.length == r["length"]).first()
+        if not track:
+            track = Track(
+                place=r["place"],
+                course=r["course"],
+                length=r["length"],
+            )
+            db.add(track)
+            db.flush()
 
         existing_race = (db.query(Race).filter(Race.id == r["race_id"]).first())
 
         if not existing_race:
             race = Race(
                 id=r["race_id"],
+                track_id=track.id,
                 race_number=r["race_number"],
                 race_name=r["race_name"],
                 race_date=r["race_date"],

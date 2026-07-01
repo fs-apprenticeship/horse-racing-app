@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Text, Integer, Float, ForeignKey
+from sqlalchemy import Column, Text, Integer, Float, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.associationproxy import association_proxy
 from database import Base
@@ -21,9 +21,21 @@ class Horse(Base):
     results = relationship("RaceResult", back_populates="horse",cascade="all, delete-orphan")
     races= association_proxy('results', 'race')
 
+class Track(Base):
+    __tablename__ = "track"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    place = Column(Text)
+    course = Column(Text)
+    length = Column(Integer) 
+
+    races = relationship("Race", back_populates="track", cascade="all, delete-orphan")
+
+    __table_args__ = (UniqueConstraint("place", "course", "length", name="uq_track_config"),)
+
 class Race(Base):
     __tablename__ = "race"
     id = Column(Text, primary_key=True)
+    track_id = Column(Integer, ForeignKey("track.id"))
     race_number = Column(Integer)
     race_name = Column(Text)
     race_date = Column(Text)
@@ -34,6 +46,7 @@ class Race(Base):
     condition = Column(Text)
     weather = Column(Text)
 
+    track= relationship("Track", back_populates="races")
     results = relationship("RaceResult", back_populates="race", cascade="all, delete-orphan")
     horses= association_proxy('results', 'horse')
     
