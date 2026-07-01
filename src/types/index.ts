@@ -1,16 +1,17 @@
 export interface Horse {
     id: string;
     name_english: string;
-    name_japanese: string;
+    name_japanese?: string;
     gender: string;
     age: number;
-    trainer_name: string;
-    father_name: string;
-    father_id: string;
-    mother_name: string;
-    mother_id: string;
-    f_father_id: string;
-    f_mother_id: string;
+    trainer_name?: string;
+    father_name?: string;
+    father_id?: string;
+    mother_name?: string;
+    mother_id?: string;
+    f_father_id?: string;
+    f_mother_id?: string;
+    m_father_id?: string;
 }
 
 export interface Race {
@@ -40,4 +41,9 @@ export interface RaceResult {
     last_3f: number;
     win_odds: number;
     bracket: number;
+    race?: Race;
+}
+
+export interface HorseDetail extends Horse {
+    results?: Array<RaceResult & { race: Race }>;
 }
