@@ -73,23 +73,22 @@ def load_horse_into_db(db: Session, horse_id: str) -> Horse:
     # Create tracks, races and race results
     for r in history:
 
-        track_id = r['place']
-        existing_track = db.query(Track).filter(Track.id == track_id).first()
-        if not existing_track:
+        track = db.query(Track).filter(Track.place == r['place'], Track.course == r["course"], Track.length == r["length"]).first()
+        if not track:
             track = Track(
-                id=track_id,
-                name=r["place"],
-                surface=r["course"],
+                place=r["place"],
+                course=r["course"],
                 length=r["length"],
             )
             db.add(track)
+            db.flush()
 
         existing_race = (db.query(Race).filter(Race.id == r["race_id"]).first())
 
         if not existing_race:
             race = Race(
                 id=r["race_id"],
-                track_id=track_id,
+                track_id=track.id,
                 race_number=r["race_number"],
                 race_name=r["race_name"],
                 race_date=r["race_date"],
