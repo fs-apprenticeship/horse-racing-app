@@ -44,6 +44,25 @@ export interface RaceResult {
     race?: Race;
 }
 
+export interface HorseSummaryStats {
+    total_races: number;
+    wins: number;
+    top_three: number;
+    best_rank: number | null;
+    average_rank: number | null;
+    total_prize: number;
+    recent_form: string;
+}
+
+export interface HorseSummary {
+    horse_id: string;
+    horse_name: string;
+    summary: string;
+    source: "openai" | "heuristic";
+    stats: HorseSummaryStats;
+}
+
 export interface HorseDetail extends Horse {
     results?: Array<RaceResult & { race: Race }>;
+    summary?: HorseSummary;
 }
