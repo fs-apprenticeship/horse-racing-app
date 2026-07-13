@@ -99,6 +99,22 @@ export default async function HorseDetailPage({
                                 <strong>Horse ID:</strong> {horse.id}
                             </div>
                         </div>
+
+                        {horse.summary?.summary ? (
+                            <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3">
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-700">
+                                    Race summary
+                                </div>
+                                <p className="mt-2 text-sm leading-6 text-foreground/90">
+                                    {horse.summary.summary}
+                                </p>
+                                <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                                    <span>Starts: {horse.summary.stats.total_races}</span>
+                                    <span>Wins: {horse.summary.stats.wins}</span>
+                                    <span>Top-3: {horse.summary.stats.top_three}</span>
+                                </div>
+                            </div>
+                        ) : null}
                     </CardContent>
                 </Card>
 

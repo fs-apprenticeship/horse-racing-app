@@ -1,7 +1,11 @@
 import json
 import os
+from typing import Optional
+
 import keibascraper
+import requests
 from fastapi import HTTPException
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from models import Horse, Race, RaceResult, Track
 
@@ -122,6 +126,127 @@ def load_horse_into_db(db: Session, horse_id: str) -> Horse:
     db.refresh(horse)
 
     return horse
+
+
+def _build_summary_stats(horse: Horse) -> dict:
+    results = sorted(
+        horse.results,
+        key=lambda result: result.race.race_date or "",
+        reverse=False,
+    )
+
+    ranked_results = [result for result in results if result.rank is not None]
+    total_races = len(results)
+    wins = sum(1 for result in ranked_results if result.rank == 1)
+    top_three = sum(1 for result in ranked_results if result.rank in {1, 2, 3})
+    best_rank = min((result.rank for result in ranked_results), default=None)
+    average_rank = round(
+        sum(result.rank for result in ranked_results) / len(ranked_results),
+        2,
+    ) if ranked_results else None
+    total_prize = round(sum(result.prize or 0 for result in results), 2)
+
+    recent_results = results[-3:]
+    recent_form = ", ".join(
+        f"#{result.rank}" if result.rank is not None else "unplaced"
+        for result in recent_results
+    ) or "no recent starts"
+
+    return {
+        "total_races": total_races,
+        "wins": wins,
+        "top_three": top_three,
+        "best_rank": best_rank,
+        "average_rank": average_rank,
+        "total_prize": total_prize,
+        "recent_form": recent_form,
+    }
+
+
+def _build_fallback_summary(horse: Horse, stats: dict) -> str:
+    display_name = horse.name_english or horse.name_japanese or horse.id
+
+    if stats["total_races"] == 0:
+        return f"{display_name} has not started in any recorded races yet."
+
+    if stats["wins"] == 0:
+        return (
+            f"{display_name} has started in {stats['total_races']} races without a win so far, "
+            f"with {stats['top_three']} top-three finishes and a best result of #{stats['best_rank']}."
+        )
+
+    return (
+        f"{display_name} has competed in {stats['total_races']} races, earning {stats['wins']} win(s) "
+        f"and {stats['top_three']} top-three finish(es). The horse's best result was #{stats['best_rank']} "
+        f"and its recent form reads {stats['recent_form']}."
+    )
+
+
+def _generate_ai_summary(horse: Horse, stats: dict) -> Optional[str]:
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return None
+
+    try:
+        response = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers={"Authorization": f"Bearer {api_key}"},
+            json={
+                "model": os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "You are a concise horse-racing analyst. Write a short, polished summary from the supplied stats.",
+                    },
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Create a short horse-racing summary for {horse.name_english or horse.name_japanese or horse.id}. "
+                            f"Use these stats: {stats['total_races']} races, {stats['wins']} wins, {stats['top_three']} top-three finishes, "
+                            f"best result #{stats['best_rank']}, average rank {stats['average_rank']}, and recent form {stats['recent_form']}."
+                        ),
+                    },
+                ],
+                "temperature": 0.7,
+                "max_tokens": 120,
+            },
+            timeout=20,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload["choices"][0]["message"]["content"].strip()
+    except Exception:
+        return None
+
+
+def generate_horse_race_summary(horse: Horse) -> dict:
+    stats = _build_summary_stats(horse)
+    ai_summary = _generate_ai_summary(horse, stats)
+
+    return {
+        "horse_id": horse.id,
+        "horse_name": horse.name_english or horse.name_japanese or horse.id,
+        "summary": ai_summary or _build_fallback_summary(horse, stats),
+        "source": "openai" if ai_summary else "heuristic",
+        "stats": stats,
+    }
+
+
+def serialize_horse_search_result(horse: Horse) -> dict:
+    return {
+        "id": horse.id,
+        "name_english": horse.name_english,
+        "name_japanese": horse.name_japanese,
+        "gender": horse.gender,
+        "age": horse.age,
+        "trainer_name": horse.trainer_name,
+        "father_name": horse.father_name,
+        "father_id": horse.father_id,
+        "mother_name": horse.mother_name,
+        "mother_id": horse.mother_id,
+        "f_father_id": horse.f_father_id,
+        "m_father_id": horse.m_father_id,
+    }
 
 
 def serialize_horse(horse: Horse) -> dict:
