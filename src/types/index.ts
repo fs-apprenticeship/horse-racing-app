@@ -63,6 +63,8 @@ export interface HorseSummary {
 }
 
 export interface HorseDetail extends Horse {
-    results?: Array<RaceResult & { race: Race }>;
+    results?: HorseRaceResult[];
     summary?: HorseSummary;
 }
+
+export type HorseRaceResult = RaceResult & { race: Race };
