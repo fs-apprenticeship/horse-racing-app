@@ -26,7 +26,7 @@ The backend is built with FastAPI and PostgreSQL.
 
 ### Prerequisites
 
-* Python 3.10+
+* Python 3.12 (recommended; Python 3.14 may cause dependency installation issues)
 * PostgreSQL
 
 ### Setup
@@ -40,7 +40,7 @@ cd backend
 Create and activate a virtual environment:
 
 ```bash
-python -m venv venv
+python3.12 -m venv venv
 
 # macOS/Linux
 source venv/bin/activate
@@ -52,7 +52,8 @@ venv\Scripts\activate
 Install dependencies:
 
 ```bash
-pip install -r requirements.txt
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
 Create a PostgreSQL database (e.g. `horseracing_db`) in your local PostgreSQL instance, then add a `.env` file in the `backend` directory containing your database connection string.
@@ -84,6 +85,26 @@ The backend API will be available at:
 ```text
 http://localhost:8000
 ```
+
+To generate AI-powered race summaries, set an OpenAI API key in the backend environment:
+
+```env
+OPENAI_API_KEY=your_openai_api_key
+```
+
+Optional: set a different model if needed:
+
+```env
+OPENAI_MODEL=gpt-4o-mini
+```
+
+You can then call:
+
+```text
+GET /horses/{horse_id}/summary
+```
+
+If no OpenAI key is configured, the API will return a heuristic summary based on the horse's race history.
 
 Interactive API documentation is available at:
 

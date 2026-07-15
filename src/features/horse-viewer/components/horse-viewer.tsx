@@ -10,8 +10,10 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import HorseResult from "./horse-result";
-import { horses } from "../temp_data";
+import { horses as fallbackHorses } from "../temp_data";
 import { Horse } from "@/types";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
 export default function HorseViewer() {
     const [loading, startTransition] = useTransition();
@@ -23,28 +25,60 @@ export default function HorseViewer() {
         setSearchValue(event.target.value);
     };
 
-    // TODO: Set up API route that returns a list of all horses
     useEffect(() => {
-        const res = horses.filter((horse) =>
-            horse.name_english
-                .toLowerCase()
-                .includes(searchValue.toLowerCase()),
-        );
+        if (!searchValue.trim()) {
+            setResults([]);
+            setNoResults(false);
+            return;
+        }
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
 
         startTransition(() => {
-            if (searchValue !== "") {
-                if (res.length > 0) {
-                    setResults(res);
-                    setNoResults(false);
-                } else {
-                    setResults([]);
-                    setNoResults(true);
-                }
-            } else {
-                setResults([]);
-                setNoResults(false);
-            }
+            fetch(`${API_BASE_URL}/horses?q=${encodeURIComponent(searchValue)}`, {
+                cache: "no-store",
+                signal: controller.signal,
+            })
+                .then(async (res) => {
+                    if (!res.ok) {
+                        throw new Error("Search request failed");
+                    }
+
+                    const data = (await res.json()) as Horse[];
+                    if (data.length > 0) {
+                        setResults(data);
+                        setNoResults(false);
+                    } else {
+                        const fallbackResults = fallbackHorses.filter((horse) =>
+                            horse.name_english
+                                .toLowerCase()
+                                .includes(searchValue.toLowerCase()),
+                        );
+
+                        setResults(fallbackResults);
+                        setNoResults(fallbackResults.length === 0);
+                    }
+                })
+                .catch(() => {
+                    const fallbackResults = fallbackHorses.filter((horse) =>
+                        horse.name_english
+                            .toLowerCase()
+                            .includes(searchValue.toLowerCase()),
+                    );
+
+                    setResults(fallbackResults);
+                    setNoResults(fallbackResults.length === 0);
+                })
+                .finally(() => {
+                    clearTimeout(timeout);
+                });
         });
+
+        return () => {
+            controller.abort();
+            clearTimeout(timeout);
+        };
     }, [searchValue]);
 
     return (
